@@ -36,6 +36,7 @@ export interface MockResponse {
   header(field: string, value?: string | Array<string>): MockResponse
   getHeader(name: string): string | number | string[] | undefined
   setHeader(name: string, value: string | string[]): MockResponse
+  append: jest.Mock
   removeHeader(name: string): void
   cookie: jest.Mock
   clearCookie: jest.Mock
@@ -98,7 +99,8 @@ type ExpressFixtures = {
    * both the getHeaders and get functions.
    *
    * @returns A MockResponse with status, get, getHeaders, getHeader, setHeader,
-   * removeHeader, json, header, render, redirect, send, cookie, clearCookie,
+   * removeHeader, append, json, header, render, redirect, send, cookie,
+   * clearCookie,
    * and end functions, and a locals property.
    */
   response: (options?: {
@@ -196,6 +198,29 @@ export const express: ExpressFixtures = {
         clonedHeaders[name.toLowerCase()] = value
         return this
       },
+      // A jest.Mock *with* Express's behaviour, so a spec can assert the call
+      // (`expect(res.append).toHaveBeenCalledWith("Set-Cookie", ...)`) and
+      // still read the accumulated header back via `getHeader`. Appending
+      // accumulates where `setHeader` replaces — `Set-Cookie` is the case that
+      // matters, since a `setHeader` over the top silently drops a cookie.
+      append: jest.fn(function (
+        this: MockResponse,
+        name: string,
+        value?: string | Array<string>,
+      ): MockResponse {
+        const key = name.toLowerCase()
+        const previous = clonedHeaders[key]
+
+        clonedHeaders[key] =
+          previous === undefined
+            ? (value as string | string[])
+            : ([] as Array<string>).concat(
+                previous as string | Array<string>,
+                (value ?? []) as string | Array<string>,
+              )
+
+        return this
+      }),
       removeHeader(name): void {
         delete clonedHeaders[name]
         delete clonedHeaders[name.toLowerCase()]

@@ -107,6 +107,39 @@ describe("express", () => {
       expect(res.getHeader("x-custom")).toBe("value")
     })
 
+    describe("append()", () => {
+      describe("Given no existing header", () => {
+        it("should set it", () => {
+          const res = express.response()
+
+          res.append("Set-Cookie", "a=1")
+
+          expect(res.getHeader("set-cookie")).toBe("a=1")
+        })
+      })
+
+      describe("Given a header already set", () => {
+        it("should accumulate rather than replace, unlike setHeader", () => {
+          const res = express.response()
+
+          res.append("Set-Cookie", "a=1")
+          res.append("Set-Cookie", "b=2")
+
+          expect(res.getHeader("set-cookie")).toEqual(["a=1", "b=2"])
+        })
+      })
+
+      describe("Given a spec asserting the call", () => {
+        it("should record it like any other mock", () => {
+          const res = express.response()
+
+          res.append("Set-Cookie", "a=1")
+
+          expect(res.append).toHaveBeenCalledWith("Set-Cookie", "a=1")
+        })
+      })
+    })
+
     describe("status()", () => {
       const res = express.response()
       const returned = res.status(404)

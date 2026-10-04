@@ -1,6 +1,6 @@
 {
   "name": "@neomaventures/mocks",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mocks of Express and NestJS framework types, for unit-testing guards, interceptors, filters, pipes and middleware.",
   "author": "Daniel Bruce",
   "repository": {
